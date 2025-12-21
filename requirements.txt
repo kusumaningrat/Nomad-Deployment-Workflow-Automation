@@ -1,0 +1,7 @@
+streamlit==1.28.1
+jinja2==3.1.2
+psycopg2==2.9.7
+hvac==2.1.0
+PyGitHub==2.1.1
+python-nomad==1.5.0
+requests==2.31.0
