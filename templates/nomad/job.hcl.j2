@@ -42,12 +42,12 @@ job "{{ job_name }}-App" {
       driver = "docker"
 
       config {
-        image = "harbor-registry.service.consul:8085/emoney-advisor/{{ job_name }}:IMAGE_PLACE_HOLDER
+        image = "harbor-registry.service.consul:8085/{{ registry_name }}/{{ job_name }}:IMAGE_PLACE_HOLDER"
         ports = ["http"]
         dns_servers = ["172.17.0.1", "172.18.0.1", "8.8.8.8", "8.8.4.4", "1.1.1.1"]
         auth {
-          username = "admin"
-          password = "GlynacP455"
+          username = "{{ registry_user }}"
+          password = "{{ registry_pass }}"
           server_address = "harbor-registry.service.consul:8085"
         }
       }
