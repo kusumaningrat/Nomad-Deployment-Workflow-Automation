@@ -226,9 +226,38 @@ def deploy_git():
         return jsonify({"success": True, "message": result.get('message', 'Pushed')})
 
     except Exception as e:
-        app.logger.error(f"Git deployment failed: {e}")
+        app.logger.error(f"Push nomad job failed: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
+@app.route('/run_deploy', methods=['POST'])
+def run_deploy():
+    try:
+        data = request.json or {}
+        job_name = data.get('job_name')
+        
+        repo_map_raw = load_repo_map()
+        repo_map = repo_map_raw.get("data", {})
+        repo_url = resolve_repo_url(job_name, repo_map)
+
+        if not repo_url:
+            return jsonify({
+                "success": False,
+                "error": f"No repo found for job_name '{job_name}'"
+            }), 400
+
+        result = push_to_github(
+            repo_url=repo_url,
+            branch="main",
+            target_path=f"{job_name}/deploy.txt",
+            content="Run Deployment",
+            commit_message=f"feat(deployment): Run Deployment for {job_name}"
+        )
+
+        return jsonify({"success": True, "message": result.get('message', 'Pushed')})
+
+    except Exception as e:
+        app.logger.error(f"Run deployment failed: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

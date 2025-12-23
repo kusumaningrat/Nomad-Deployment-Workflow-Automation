@@ -7,8 +7,11 @@ const pipelineSteps = [
     name: "4. Generate CI/CD Config & Push to Github",
     status: "pending",
   },
-  { id: "step5", name: "5. Run CI/CD Pipeline", status: "pending" },
-  { id: "step6", name: "6. Deploy Nomad Job", status: "pending" },
+  {
+    id: "step5",
+    name: "5. Run CI/CD Pipeline & Deploy Job",
+    status: "pending",
+  },
 ];
 
 async function startDeployment() {
@@ -35,6 +38,7 @@ async function startDeployment() {
     { id: "step2", api: "/deploy_vault", payload: { vault_yaml } },
     { id: "step3", api: "/deploy_git", payload: { job_name, hclOutput } },
     { id: "step4", api: "/generate_ci", payload: { job_name } },
+    { id: "step5", api: "/run_deploy", payload: { job_name } },
   ];
 
   for (let i = 0; i < steps.length; i++) {

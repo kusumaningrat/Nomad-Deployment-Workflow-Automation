@@ -1,0 +1,4 @@
+vault_path: secrets/data/emoney/emoney-advisor-mock-server
+env:
+  AIRFLOW_BASE_URL: https://a1rfl0w-w3b.ops.glynac.ai
+  ENVIRONMENT: dev
