@@ -2,9 +2,13 @@ const pipelineSteps = [
   { id: "step1", name: "1. Create PostgreSQL Database", status: "pending" },
   { id: "step2", name: "2. Create Vault Secret (K/V v2)", status: "pending" },
   { id: "step3", name: "3. Push Nomad Job to GitHub", status: "pending" },
-  { id: "step3", name: "4. Push Ci/CD Config to GitHub", status: "pending" },
-  { id: "step4", name: "5. Run CI/CD Pipeline", status: "pending" },
-  { id: "step5", name: "6. Deploy Nomad Job", status: "pending" },
+  {
+    id: "step4",
+    name: "4. Generate CI/CD Config & Push to Github",
+    status: "pending",
+  },
+  { id: "step5", name: "5. Run CI/CD Pipeline", status: "pending" },
+  { id: "step6", name: "6. Deploy Nomad Job", status: "pending" },
 ];
 
 async function startDeployment() {
@@ -13,10 +17,14 @@ async function startDeployment() {
   const job_name = document.getElementById("job_name").value;
   const hclOutput = document.getElementById("hclOutput").value;
   const vault_yaml = document.getElementById("vault_yaml").value;
+  const resetBtn = document.getElementById("resetBtn");
 
   deployBtn.disabled = true;
   deployBtn.textContent = "Pipeline Running...";
-  deployIcon.classList.remove("hidden");
+  // deployIcon.classList.remove("hidden");
+
+  resetBtn.disabled = true;
+  resetBtn.classList.add("hidden");
 
   const steps = [
     {
@@ -26,6 +34,7 @@ async function startDeployment() {
     },
     { id: "step2", api: "/deploy_vault", payload: { vault_yaml } },
     { id: "step3", api: "/deploy_git", payload: { job_name, hclOutput } },
+    { id: "step4", api: "/generate_ci", payload: { job_name } },
   ];
 
   for (let i = 0; i < steps.length; i++) {
@@ -61,9 +70,8 @@ async function startDeployment() {
       );
       deployBtn.disabled = false;
       deployBtn.textContent = "Start Deployment Pipeline";
-      deployIcon.classList.add("hidden");
+      // deployIcon.classList.add("hidden");
 
-      const resetBtn = document.getElementById("resetBtn");
       resetBtn.disabled = false;
       resetBtn.classList.remove("hidden");
 
@@ -76,5 +84,8 @@ async function startDeployment() {
   showMessageBox("Deployment Success", "All steps completed successfully.");
   deployBtn.disabled = false;
   deployBtn.textContent = "Start Deployment Pipeline";
-  deployIcon.classList.add("hidden");
+  // deployIcon.classList.add("hidden");
+
+  resetBtn.disabled = false;
+  resetBtn.classList.remove("hidden");
 }

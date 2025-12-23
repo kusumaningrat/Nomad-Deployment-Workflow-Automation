@@ -34,3 +34,13 @@ def write_kv2_secret(client, secret_path, data, mount_point=BASE_MOUNT):
         path=full_path,
         secret=data,
     )
+
+def load_repo_map():
+    client = get_vault_client()
+
+    secret = client.secrets.kv.v2.read_secret_version(
+        path="repo-map",
+        mount_point="secrets"
+    )
+
+    return secret["data"]["data"]

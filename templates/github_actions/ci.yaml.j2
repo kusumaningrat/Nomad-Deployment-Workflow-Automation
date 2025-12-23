@@ -1,0 +1,83 @@
+name: Docker Image CI - {{ job_name }}
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "{{ job_name }}/**"
+
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "{{ job_name }}/**"
+
+env:
+  PRODUCT_VERSION: "1.6.0"
+  VERSION: "1.2.0"
+  ENVIRONMENT: "s9p"
+  DOCKER_IMAGE: image-reg.ops.glynac.ai/{{ registry_name }}/{{ job_name }}
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    outputs:
+      IMAGE_TAG: {% raw %}${{ steps.export_tag.outputs.IMAGE_TAG }}{% endraw %}
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Generate IMAGE_TAG
+        id: export_tag
+        run: |
+          IMAGE_TAG="${ENVIRONMENT}-v${VERSION}-${GITHUB_SHA::7}"
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Login to Harbor
+        uses: docker/login-action@v3
+        with:
+          registry: image-reg.ops.glynac.ai
+          username: admin
+          password: {% raw %}${{ secrets.HARBOR_TOKEN }}{% endraw %}
+
+      - name: Build & Push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./{{ job_name }}
+          file: ./{{ job_name }}/Dockerfile.stage
+          push: true
+          tags: |
+            {% raw %}${{ env.DOCKER_IMAGE }}:${{ env.IMAGE_TAG }}{% endraw %}
+
+  deploy:
+    runs-on: self-hosted
+    needs: build
+
+    env:
+      IMAGE_TAG: {% raw %}${{ needs.build.outputs.IMAGE_TAG }}{% endraw %}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Nomad
+        uses: hashicorp/setup-nomad@main
+        with:
+          version: {% raw %}${{ env.PRODUCT_VERSION }}{% endraw %}
+
+      - name: Update Nomad job image tag
+        run: |
+          sed -i "s|IMAGE_TAG_PLACEHOLDER|${IMAGE_TAG}|g" nomad/{{ job_name }}.hcl
+
+      - name: Deploy to Nomad
+        env:
+          NOMAD_ADDR: {% raw %}${{ vars.NOMAD_ADDR }}{% endraw %}
+          NOMAD_TOKEN: {% raw %}${{ secrets.NOMAD_TOKEN }}{% endraw %}
+        run: |
+          nomad job run nomad/{{ job_name }}.hcl

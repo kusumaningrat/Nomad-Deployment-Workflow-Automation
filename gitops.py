@@ -14,14 +14,15 @@ def run(cmd, cwd=None):
     )
     return result.stdout
 
-def push_nomad_job_to_github(
+def push_to_github(
         repo_url: str,
         branch: str,
-        job_name: str,
-        hcl_content: str
+        target_path: str,
+        content: str,
+        commit_message
 ):
     
-    temp_dir = tempfile.mkdtemp(prefix="nomad-git-")
+    temp_dir = tempfile.mkdtemp(prefix="gitops")
 
     try:
         repo_path = Path(temp_dir) / "repo"
@@ -35,20 +36,18 @@ def push_nomad_job_to_github(
             repo_path.as_posix()
         ])
 
-        jobs_dir = repo_path / "nomad"
-        jobs_dir.mkdir(exist_ok=True)
 
-        job_file = jobs_dir / f"{job_name}.hcl"
-
-        # 2 Write HCL
-        job_file.write_text(hcl_content)
+        # 2 Write File
+        file_path = repo_path / target_path
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path.write_text(content)
 
         # 3 Git identity
-        run(["git", "config", "user.name", "gitops-bot"], cwd=repo_path)
-        run(["git", "config", "user.email", "gitops@glynac.ai"], cwd=repo_path)
+        run(["git", "config", "user.name", "devops-glynac"], cwd=repo_path)
+        run(["git", "config", "user.email", "devops@glynac.ai"], cwd=repo_path)
 
         # 4 Commit & push
-        run(["git", "add", job_file.name], cwd=jobs_dir)
+        run(["git", "add", target_path], cwd=repo_path)
 
         # Avoid empty commit
         status = run(["git", "status", "--porcelain"], cwd=repo_path)
@@ -56,7 +55,7 @@ def push_nomad_job_to_github(
             return {"message": "No changes detected, nothing to push"}
 
         run(
-            ["git", "commit", "-m", f"feat(deployment): Add/Update Nomad job for {job_name}"],
+            ["git", "commit", "-m", commit_message],
             cwd=repo_path
         )
         run(["git", "push", "origin", branch], cwd=repo_path)

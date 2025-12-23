@@ -10,7 +10,7 @@ function resetDeployment() {
   // Reset deploy button
   deployBtn.disabled = false;
   deployBtn.textContent = "Start Deployment Pipeline";
-  deployIcon.classList.add("hidden");
+  // deployIcon.classList.add("hidden");
 
   // Hide reset button
   resetBtn.disabled = true;

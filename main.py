@@ -5,8 +5,9 @@ from dotenv import load_dotenv
 
 
 from database import db_preparation
-from vault import write_kv2_secret, ensure_kv2_mount, get_vault_client
-from gitops import push_nomad_job_to_github
+from vault import write_kv2_secret, ensure_kv2_mount, get_vault_client, load_repo_map
+from gitops import push_to_github
+from util import resolve_repo_url
 
 registry_env = load_dotenv('.env')
 
@@ -42,7 +43,8 @@ def generate_job():
             "redtail": "redtail",
             "emoney": "emoney-advisor",
             "wealthbox": "wealthbox",
-            "orion": "orion"
+            "orion": "orion",
+            "hubspot": "hubspot"
         }
 
         vault_yaml_raw = data.get('vault_yaml', '')
@@ -95,6 +97,61 @@ def generate_job():
         app.logger.error(f"Error during job generation: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
     
+@app.route('/generate_ci', methods=['POST'])
+def generate_ci():
+    try:
+        data = request.json or {}
+
+        job_name = data.get('job_name', 'default-service')
+
+        REGISTRY_MAP = {
+            "redtail": "redtail",
+            "emoney": "emoney-advisor",
+            "wealthbox": "wealthbox",
+            "orion": "orion"
+        }
+
+        job_name_lower = job_name.casefold()
+
+        registry_name = next(
+            (v for k, v in REGISTRY_MAP.items() if k in job_name_lower),
+            None
+        )
+
+
+        generated_ci = render_template(
+            'github_actions/ci.yaml.j2',
+            job_name=job_name,
+            registry_name=registry_name,
+        )
+
+        # push_nomad_job_to_github()
+        # print(jsonify({'success': True, 'ci-config': generated_ci}))
+
+        repo_map_raw = load_repo_map()
+        repo_map = repo_map_raw.get("data", {})
+        repo_url = resolve_repo_url(job_name, repo_map)
+
+        if not repo_url:
+            return jsonify({
+                "success": False,
+                "error": f"No repo found for job_name '{job_name}'"
+            }), 400
+
+        push_to_github(
+            repo_url=repo_url,
+            branch="main",
+            target_path=f".github/workflows/{job_name}-ci.yml",
+            content=generated_ci,
+            commit_message=f"feat(deployment): add/update {job_name}"
+        )
+
+
+        return jsonify({'success': True, 'ci-config': generated_ci})
+    except Exception as e:
+        app.logger.error(f"Error during ci generation: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+    
 @app.route('/db_prepare', methods=['POST'])
 def deploy_db():
     try:
@@ -143,14 +200,27 @@ def deploy_git():
         data = request.json or {}
         job_name = data.get('job_name')
         hclOutput = data.get('hclOutput')
+
+        repo_map_raw = load_repo_map()
+        repo_map = repo_map_raw.get("data", {})
+        repo_url = resolve_repo_url(job_name, repo_map)
+
+        
         if not job_name or not hclOutput:
             return jsonify({"success": False, "error": "job_name and hclOutput required"}), 400
+        
+        if not repo_url:
+            return jsonify({
+                "success": False,
+                "error": f"No repo found for job_name '{job_name}'"
+            }), 400
 
-        result = push_nomad_job_to_github(
-            repo_url="git@github-personal:kusumaningrat/hubspot-test.git",
+        result = push_to_github(
+            repo_url=repo_url,
             branch="main",
-            job_name=job_name,
-            hcl_content=hclOutput
+            target_path=f"nomad/{job_name}.hcl",
+            content=hclOutput,
+            commit_message=f"feat(deployment): add/update {job_name}"
         )
 
         return jsonify({"success": True, "message": result.get('message', 'Pushed')})
