@@ -44,3 +44,13 @@ def load_repo_map():
     )
 
     return secret["data"]["data"]
+
+def load_registry_map():
+    client = get_vault_client()
+
+    secret = client.secrets.kv.v2.read_secret_version(
+        path="registry_map",
+        mount_point="secrets"
+    )
+
+    return secret["data"]["data"]

@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 
 from database import db_preparation
-from vault import write_kv2_secret, ensure_kv2_mount, get_vault_client, load_repo_map
+from vault import write_kv2_secret, ensure_kv2_mount, get_vault_client, load_repo_map, load_registry_map
 from gitops import push_to_github
 from util import resolve_repo_url
 
@@ -39,13 +39,10 @@ def generate_job():
         memory = data.get('memory', '256')
         node = data.get('node', 'general')
 
-        REGISTRY_MAP = {
-            "redtail": "redtail",
-            "emoney": "emoney-advisor",
-            "wealthbox": "wealthbox",
-            "orion": "orion",
-            "hubspot": "hubspot"
-        }
+        registry_map_raw = load_registry_map()
+        registry_map = registry_map_raw.get("data", {})
+        print(registry_map)
+        # repo_url = resolve_repo_url(job_name, repo_map)
 
         vault_yaml_raw = data.get('vault_yaml', '')
         vault_path = None
@@ -65,7 +62,7 @@ def generate_job():
         job_name_lower = job_name.casefold()
 
         registry_name = next(
-            (v for k, v in REGISTRY_MAP.items() if k in job_name_lower),
+            (v for k, v in registry_map.items() if k in job_name_lower),
             None
         )
         registry_user = os.getenv('REGISTRY_USERNAME')
