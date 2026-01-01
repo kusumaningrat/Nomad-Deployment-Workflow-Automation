@@ -1,4 +1,5 @@
 import json, os, nomad, yaml
+from datetime import datetime
 from flask import Flask, render_template_string, render_template, request, jsonify
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 from dotenv import load_dotenv
@@ -41,7 +42,7 @@ def generate_job():
 
         registry_map_raw = load_registry_map()
         registry_map = registry_map_raw.get("data", {})
-        print(registry_map)
+        # print(registry_map)
         # repo_url = resolve_repo_url(job_name, repo_map)
 
         vault_yaml_raw = data.get('vault_yaml', '')
@@ -62,7 +63,10 @@ def generate_job():
         job_name_lower = job_name.casefold()
 
         registry_name = next(
-            (v for k, v in registry_map.items() if k in job_name_lower),
+            (
+                v for k, v in registry_map.items()
+                if k.casefold() in job_name_lower
+            ),
             None
         )
         registry_user = os.getenv('REGISTRY_USERNAME')
@@ -105,7 +109,8 @@ def generate_ci():
             "redtail": "redtail",
             "emoney": "emoney-advisor",
             "wealthbox": "wealthbox",
-            "orion": "orion"
+            "orion": "orion",
+            "envestnet": "envestnet"
         }
 
         job_name_lower = job_name.casefold()
@@ -158,6 +163,9 @@ def deploy_db():
         if not db_name:
             return jsonify({"success": False, "error": "database.name is required"}), 400
 
+        if db_name.endswith("-service"):
+            db_name = db_name[:-8] 
+            
         db_preparation(db_name=db_name)
 
         return jsonify({"success": True, "message": f"Database {db_name} created."})
@@ -247,7 +255,7 @@ def run_deploy():
             branch="main",
             target_path=f"{job_name}/deploy.txt",
             content="Run Deployment",
-            commit_message=f"feat(deployment): Run Deployment for {job_name}"
+            commit_message=f"Run Deployment at {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"
         )
 
         return jsonify({"success": True, "message": result.get('message', 'Pushed')})

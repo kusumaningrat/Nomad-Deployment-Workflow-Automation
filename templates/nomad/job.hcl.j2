@@ -26,10 +26,10 @@ job "{{ job_name }}-App" {
       port = "http"
       check {
         name     = "api-health"
-        type     = "tcp"
-        port     = "http"
-        interval = "15s"
-        timeout  = "5s"
+        type     = "http"
+        path     = "/health"
+        interval = "30s"
+        timeout  = "10s"
       }
     }
 
@@ -42,7 +42,7 @@ job "{{ job_name }}-App" {
       driver = "docker"
 
       config {
-        image = "harbor-registry.service.consul:8085/{{ registry_name }}/{{ job_name }}:IMAGE_PLACE_HOLDER"
+        image = "harbor-registry.service.consul:8085/{{ registry_name }}/{{ job_name }}:IMAGE_TAG_PLACEHOLDER"
         ports = ["http"]
         dns_servers = ["172.17.0.1", "172.18.0.1", "8.8.8.8", "8.8.4.4", "1.1.1.1"]
         auth {
@@ -62,7 +62,7 @@ job "{{ job_name }}-App" {
         env         = true
         data = <<EOF
 {% for env_name, vault_key in env.items() %}
-{{ env_name }}="{% raw %}{{ with secret "{% endraw %}{{ vault_path }}{% raw %}" }}{{ .Data.data.{% endraw %}{{ env_name }}{% raw %} }}{{ end }}{% endraw %}"
+{{ env_name }}="{% raw %}{{ with secret "secrets/data/{% endraw %}{{ vault_path }}{% raw %}" }}{{ .Data.data.{% endraw %}{{ env_name }}{% raw %} }}{{ end }}{% endraw %}"
 {% endfor %}
 EOF
       }

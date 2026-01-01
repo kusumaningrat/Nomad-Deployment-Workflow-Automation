@@ -53,9 +53,15 @@ def db_preparation(db_name):
 
     # Grant privileges on database
     cur.execute(
-        sql.SQL("GRANT ALL PRIVILEGES ON DATABASE {} TO {}")
+        sql.SQL("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO {}")
         .format(
-            sql.Identifier(db_identifier + "_db"),
+            sql.Identifier(db_identifier)
+        )
+    )
+
+    cur.execute(
+        sql.SQL("GRANT USAGE, CREATE ON SCHEMA public TO {}")
+        .format(
             sql.Identifier(db_identifier)
         )
     )

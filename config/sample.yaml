@@ -1,4 +1,34 @@
-vault_path: secrets/data/emoney/emoney-advisor-mock-server
+vault_path: envestnet/envestnet-core-service
 env:
-  AIRFLOW_BASE_URL: https://a1rfl0w-w3b.ops.glynac.ai
-  ENVIRONMENT: dev
+  # Application settings
+  APP_NAME: Envestnet Service Orchestrator
+  API_VERSION: v1
+  DEBUG: False
+  ENVIRONMENT: stage
+  
+  # Security
+  API_KEY: default_api_key
+  SECRET_KEY: default_secret_key
+  ACCESS_TOKEN_EXPIRE_MINUTES: 10080
+  
+  # Database
+  DATABASE_URL: postgresql+asyncpg://envestnet_core:envestnet_core_pass@master.db-glynac.service.consul:5432/envestnet_core_db
+  
+  # CORS
+  ALLOWED_ORIGINS: "*"
+  
+  # Service settings
+  DEFAULT_SERVICE_TIMEOUT: 5.0
+  SCAN_RESULT_RETENTION_DAYS: 30
+  
+  # Service URLs Staging
+  IDENTITY_URL_STAGE: http://envestnet-identity-service.consul.service:5721
+  CLIENT_URL_STAGE: http://envestnet-client-service.consul.service:5722
+  PORTFOLIO_URL_STAGE: http://envestnet-portofolio-service.consul.service:5723
+  
+  ORG_SERVICE_URL: ${ORG_SERVICE_URL:-http://envestnet-org-service:8003}
+  SERVICE_ID: envestnet-gatherer
+  HMAC_SECRET_KEY: your-envestnet-hmac-secret-key
+  
+  # Logging
+  LOG_LEVEL: INFO

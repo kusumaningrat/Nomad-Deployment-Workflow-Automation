@@ -12,7 +12,7 @@ on:
       - "{{ job_name }}/**"
 
 env:
-  PRODUCT_VERSION: "1.6.0"
+  PRODUCT_VERSION: "latest"
   VERSION: "1.2.0"
   ENVIRONMENT: "s9p"
   DOCKER_IMAGE: image-reg.ops.glynac.ai/{{ registry_name }}/{{ job_name }}
@@ -50,7 +50,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./{{ job_name }}
-          file: ./{{ job_name }}/Dockerfile.stage
+          file: ./{{ job_name }}/Dockerfile
           push: true
           tags: |
             {% raw %}${{ env.DOCKER_IMAGE }}:${{ env.IMAGE_TAG }}{% endraw %}
