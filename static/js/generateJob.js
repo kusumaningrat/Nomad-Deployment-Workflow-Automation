@@ -20,6 +20,7 @@ async function generateJob() {
     exposed_port: form.exposed_port.value,
     worker_name: form.worker_name.value,
     vault_role: form.vault_role.value,
+    health_check_path: form.health_check_path.value,
     cpu: form.cpu.value,
     memory: form.memory.value,
     node: form.node_class.value,

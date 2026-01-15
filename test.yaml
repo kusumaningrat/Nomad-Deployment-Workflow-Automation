@@ -1,0 +1,53 @@
+vault_path: emoney/emoney-master
+env:
+  APP_VERSION: 1.0.0
+  APP_TITLE: Emoney-Service
+  APP_DESCRIPTION: Service for extracting and loading data using DLT
+
+  # Flask Configuration
+  FLASK_ENV: staging
+  FLASK_DEBUG: false
+  SECRET_KEY: stage-secret-key-change-in-production
+  PORT: 5709
+  HOST: 0.0.0.0
+
+  # Database Configuration
+  DB_HOST: master.db-glynac.service.consul
+  DB_PORT: 5432
+  DB_NAME: emoney_master_db
+  DB_USER: emoney_master
+  DB_PASSWORD: emoney_master_pass
+  DB_SCHEMA: emoney_master_db
+
+  # DLT PostgreSQL destination configuration (required by DLT)
+  DESTINATION__POSTGRES__CREDENTIALS__DATABASE: emoney_master_db
+  DESTINATION__POSTGRES__CREDENTIALS__USERNAME: emoney_master
+  DESTINATION__POSTGRES__CREDENTIALS__PASSWORD: emoney_master_pass
+  DESTINATION__POSTGRES__CREDENTIALS__HOST: master.db-glynac.service.consul
+  DESTINATION__POSTGRES__CREDENTIALS__PORT: 5432
+
+  # API Configuration
+  EMONEY_API_BASE_URL: http://emoney-mock-server.service.consul:5640
+
+  # DLT Configuration
+  DLT_PIPELINE_NAME: emoney_service_pipeline_stage
+  DLT_WORKING_DIR: /app/.dlt
+
+  # Wealthbox API Configuration
+  EMONEY_API_TIMEOUT: 45
+  EMONEY_API_RATE_LIMIT: 200
+
+  # Service Configuration
+  MAX_CONCURRENT_SCANS: 5
+  SCAN_TIMEOUT_HOURS: 48
+  CLEANUP_DAYS: 14
+
+  # Logging Configuration
+  LOG_LEVEL: INFO
+  LOKI_ENABLED: true
+  LOG_FORMAT: json
+
+  # Kafka Configuration
+  KAFKA_BOOTSTRAP_SERVERS: kafka.service.consul:9092
+  KAFKA_ENABLED: true
+  KAFKA_TOPIC_1: orion-users-stream

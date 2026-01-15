@@ -39,6 +39,7 @@ def generate_job():
         cpu = int(data.get('cpu', 500))
         memory = data.get('memory', '256')
         node = data.get('node', 'general')
+        health_check_path = data.get('health_check_path')
 
         registry_map_raw = load_registry_map()
         registry_map = registry_map_raw.get("data", {})
@@ -90,6 +91,7 @@ def generate_job():
             cpu=cpu,
             memory=memory,
             node=node,
+            health_check_path=health_check_path
         )
 
 
@@ -104,6 +106,7 @@ def generate_ci():
         data = request.json or {}
 
         job_name = data.get('job_name', 'default-service')
+        repo_name = data.get('repo_name')
 
         REGISTRY_MAP = {
             "redtail": "redtail",
@@ -125,6 +128,7 @@ def generate_ci():
             'github_actions/ci.yaml.j2',
             job_name=job_name,
             registry_name=registry_name,
+            repo_name=repo_name
         )
 
         # push_nomad_job_to_github()
@@ -239,6 +243,8 @@ def run_deploy():
     try:
         data = request.json or {}
         job_name = data.get('job_name')
+        repo_name = data.get('repo_name')
+
         
         repo_map_raw = load_repo_map()
         repo_map = repo_map_raw.get("data", {})
@@ -253,9 +259,9 @@ def run_deploy():
         result = push_to_github(
             repo_url=repo_url,
             branch="main",
-            target_path=f"{job_name}/deploy.txt",
+            target_path=f"{repo_name}/deploy.txt",
             content="Run Deployment",
-            commit_message=f"Run Deployment at {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"
+            commit_message=f"Run Deployment at {repo_name}-{datetime.now().strftime("%H:%M:%S")}"
         )
 
         return jsonify({"success": True, "message": result.get('message', 'Pushed')})
