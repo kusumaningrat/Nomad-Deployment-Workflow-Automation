@@ -27,7 +27,7 @@ job "{{ job_name }}-App" {
       check {
         name     = "api-health"
         type     = "http"
-        path     = "/health"
+        path     = "{{ health_check_path }}"
         interval = "30s"
         timeout  = "10s"
       }

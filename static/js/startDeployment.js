@@ -19,6 +19,7 @@ async function startDeployment() {
   const deployIcon = document.getElementById("deployIcon");
   const job_name = document.getElementById("job_name").value;
   const hclOutput = document.getElementById("hclOutput").value;
+  const repo_name = document.getElementById("repo_name").value;
   const vault_yaml = document.getElementById("vault_yaml").value;
   const resetBtn = document.getElementById("resetBtn");
 
@@ -38,7 +39,7 @@ async function startDeployment() {
     { id: "step2", api: "/deploy_vault", payload: { vault_yaml } },
     { id: "step3", api: "/deploy_git", payload: { job_name, hclOutput } },
     { id: "step4", api: "/generate_ci", payload: { job_name } },
-    { id: "step5", api: "/run_deploy", payload: { job_name } },
+    { id: "step5", api: "/run_deploy", payload: { job_name, repo_name } },
   ];
 
   for (let i = 0; i < steps.length; i++) {

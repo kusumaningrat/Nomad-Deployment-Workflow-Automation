@@ -1,0 +1,6 @@
+vault_path: root_path/app-name
+health_check_path:
+env:
+  APP_VERSION: 1.0.0
+  APP_TITLE: Test App
+  APP_DESCRIPTION: Service for testing
