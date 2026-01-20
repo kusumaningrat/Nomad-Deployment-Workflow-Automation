@@ -4,12 +4,12 @@ on:
   push:
     branches: ["main"]
     paths:
-      - "{{ job_name }}/**"
+      - "{{ repo_name }}/**"
 
   pull_request:
     branches: ["main"]
     paths:
-      - "{{ job_name }}/**"
+      - "{{ repo_name }}/**"
 
 env:
   PRODUCT_VERSION: "latest"
@@ -49,8 +49,8 @@ jobs:
       - name: Build & Push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./{{ job_name }}
-          file: ./{{ job_name }}/Dockerfile.stage
+          context: ./{{ repo_name }}
+          file: ./{{ repo_name }}/Dockerfile.stage
           push: true
           tags: |
             {% raw %}${{ env.DOCKER_IMAGE }}:${{ env.IMAGE_TAG }}{% endraw %}

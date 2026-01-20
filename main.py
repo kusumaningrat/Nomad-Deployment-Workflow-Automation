@@ -40,6 +40,7 @@ def generate_job():
         memory = data.get('memory', '256')
         node = data.get('node', 'general')
         health_check_path = data.get('health_check_path')
+        health_check_path = data.get('health_check_path')
 
         registry_map_raw = load_registry_map()
         registry_map = registry_map_raw.get("data", {})
@@ -106,6 +107,7 @@ def generate_ci():
         data = request.json or {}
 
         job_name = data.get('job_name', 'default-service')
+        repo_name = data.get('repo_name')
         repo_name = data.get('repo_name')
 
         REGISTRY_MAP = {
@@ -246,6 +248,8 @@ def run_deploy():
     try:
         data = request.json or {}
         job_name = data.get('job_name')
+        repo_name = data.get('repo_name')
+
         repo_name = data.get('repo_name')
 
         
