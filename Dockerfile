@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /build
 
 # Python dependencies
-COPY app/requirements.txt .
+COPY requirements.txt .
 RUN pip install --prefix=/install --no-cache-dir -r requirements.txt
 
 # ---------- RUNTIME ----------
@@ -32,7 +32,7 @@ COPY --from=builder /install /usr/local
 WORKDIR /app
 
 # Copy application
-COPY app/ /app/
+COPY . /app/
 COPY static/ /app/static/
 
 # Environment
@@ -42,4 +42,4 @@ ENV FLASK_ENV=production
 EXPOSE 5000
 
 # Run with Gunicorn
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "main:app"]
+CMD ["python3", "main.py"]

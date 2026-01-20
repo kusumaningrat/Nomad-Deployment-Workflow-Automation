@@ -13,55 +13,65 @@ def db_name_normalizer(name: str) -> str:
     return name
 
 
-def db_connection():
+def db_connection(db_name=None):
     conn = psycopg2.connect(
         host=os.getenv('DB_HOST'),
         user=os.getenv('DB_USER'),
         password=os.getenv('DB_PASS'),
-        dbname=os.getenv('DB_NAME'),
+        dbname=db_name or os.getenv('DB_NAME'),
         port=5432
     )
     conn.autocommit = True
 
     return conn
 
-def db_preparation(db_name):
-    conn = db_connection()
+def database_exists(cur, db_name):
+    cur.execute(
+        "SELECT 1 FROM pg_database WHERE datname = %s",
+        (db_name,)
+    )
+    return cur.fetchone() is not None
 
-    db_identifier = db_name_normalizer(db_name)
-    print("DB Identifier", db_identifier)
+
+def role_exists(cur, role_name):
+    cur.execute(
+        "SELECT 1 FROM pg_roles WHERE rolname = %s",
+        (role_name,)
+    )
+    return cur.fetchone() is not None
+
+def db_preparation(db_name):
+    conn = db_connection() 
     cur = conn.cursor()
 
-    # create database
-    cur.execute(
-        sql.SQL(
-            "CREATE DATABASE {}"
+    db_identifier = db_name_normalizer(db_name)
+    db_fullname = f"{db_identifier}_db"
+
+    print("DB Identifier:", db_identifier)
+
+    # Create database if not exists
+    if not database_exists(cur, db_fullname):
+        cur.execute(
+            sql.SQL("CREATE DATABASE {}")
+            .format(sql.Identifier(db_fullname))
+        )
+
+    # Create user if not exists
+    if not role_exists(cur, db_identifier):
+        cur.execute(
+            sql.SQL(
+                "CREATE USER {} WITH ENCRYPTED PASSWORD {}"
             ).format(
-            sql.Identifier(db_identifier + "_db")
+                sql.Identifier(db_identifier),
+                sql.Literal(db_identifier + "_pass")
+            )
         )
-    )
 
-    # create user
+    # Grant database privileges (safe to re-run)
     cur.execute(
-        sql.SQL(
-            "CREATE USER {} WITH ENCRYPTED PASSWORD {}"
-        ).format(
-            sql.Identifier((db_identifier)),
-            sql.Literal(db_identifier + "_pass")
-        )
-    )
-
-    # Grant privileges on database
-    cur.execute(
-        sql.SQL("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO {}")
+        sql.SQL("GRANT ALL PRIVILEGES ON DATABASE {} TO {}")
         .format(
-            sql.Identifier(db_identifier)
-        )
-    )
-
-    cur.execute(
-        sql.SQL("GRANT USAGE, CREATE ON SCHEMA public TO {}")
-        .format(
+            sql.Identifier(db_fullname),
             sql.Identifier(db_identifier)
         )
     )
@@ -69,29 +79,33 @@ def db_preparation(db_name):
     cur.close()
     conn.close()
 
-    grant_privileges(db_name=db_identifier)
-
-def grant_privileges(db_name):
-    conn = db_connection()
-    identifier_name = db_name_normalizer(db_name)
-    cur = conn.cursor()
-
-    # Grant table privileges
-    cur.execute(
-        sql.SQL(
-            "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO {}"
-        ).format(sql.Identifier((identifier_name)))
+    # IMPORTANT: connect to the correct database
+    grant_privileges(
+        db_name=db_fullname,
+        role_name=db_identifier
     )
 
-    # Grant schema privileges
+
+def grant_privileges(db_name, role_name):
+    conn = db_connection(db_name=db_name)
+    cur = conn.cursor()
+
+    # Existing tables
+    cur.execute(
+        sql.SQL(
+            "GRANT SELECT, INSERT, UPDATE, DELETE "
+            "ON ALL TABLES IN SCHEMA public TO {}"
+        ).format(sql.Identifier(role_name))
+    )
+
+    # Schema privileges
     cur.execute(
         sql.SQL(
             "GRANT USAGE, CREATE ON SCHEMA public TO {}"
-        ).format(sql.Identifier(identifier_name))
+        ).format(sql.Identifier(role_name))
     )
+
 
     cur.close()
     conn.close()
 
-if __name__ == "__main":
-    db_preparation()

@@ -168,7 +168,9 @@ def deploy_db():
             return jsonify({"success": False, "error": "database.name is required"}), 400
 
         if db_name.endswith("-service"):
-            db_name = db_name[:-8] 
+            db_name = db_name[:-8]
+
+        print("Db_name: ", db_name)
             
         db_preparation(db_name=db_name)
 
@@ -218,6 +220,8 @@ def deploy_git():
         if not job_name or not hclOutput:
             return jsonify({"success": False, "error": "job_name and hclOutput required"}), 400
         
+        print(repo_url)
+        
         if not repo_url:
             return jsonify({
                 "success": False,
@@ -250,18 +254,22 @@ def run_deploy():
         repo_map = repo_map_raw.get("data", {})
         repo_url = resolve_repo_url(job_name, repo_map)
 
+        now = datetime.now().strftime("%H:%M:%S")
+
+
         if not repo_url:
             return jsonify({
                 "success": False,
                 "error": f"No repo found for job_name '{job_name}'"
             }), 400
 
+
         result = push_to_github(
             repo_url=repo_url,
             branch="main",
             target_path=f"{repo_name}/deploy.txt",
             content="Run Deployment",
-            commit_message=f"Run Deployment at {repo_name}-{datetime.now().strftime("%H:%M:%S")}"
+            commit_message=f"Run Deployment at {repo_name}-{now}"
         )
 
         return jsonify({"success": True, "message": result.get('message', 'Pushed')})
@@ -271,4 +279,4 @@ def run_deploy():
         return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5000)
