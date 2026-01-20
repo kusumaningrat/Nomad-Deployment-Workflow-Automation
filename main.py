@@ -113,7 +113,8 @@ def generate_ci():
             "emoney": "emoney-advisor",
             "wealthbox": "wealthbox",
             "orion": "orion",
-            "envestnet": "envestnet"
+            "envestnet": "envestnet",
+            "black-diamond": "black-diamond"
         }
 
         job_name_lower = job_name.casefold()
@@ -170,7 +171,6 @@ def deploy_db():
         if db_name.endswith("-service"):
             db_name = db_name[:-8]
 
-        print("Db_name: ", db_name)
             
         db_preparation(db_name=db_name)
 
@@ -220,7 +220,6 @@ def deploy_git():
         if not job_name or not hclOutput:
             return jsonify({"success": False, "error": "job_name and hclOutput required"}), 400
         
-        print(repo_url)
         
         if not repo_url:
             return jsonify({
